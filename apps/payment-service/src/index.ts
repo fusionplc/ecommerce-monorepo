@@ -8,6 +8,7 @@ import { runKafkaSubscriptions } from "./utils/subscriptions.js";
 import webhookRoute from "./routes/webhooks.route.js";
 
 const app = new Hono();
+
 app.use("*", clerkMiddleware());
 app.use("*", cors({ origin: ["http://localhost:3002"] }));
 
@@ -22,37 +23,16 @@ app.get("/health", (c) => {
 app.route("/sessions", sessionRoute);
 app.route("/webhooks", webhookRoute);
 
-// app.post("/create-stripe-product", async (c) => {
-//   const res = await stripe.products.create({
-//     id: "123",
-//     name: "Test Product",
-//     default_price_data: {
-//       currency: "usd",
-//       unit_amount: 10 * 100,
-//     },
-//   });
-
-//   return c.json(res);
-// });
-
-// app.get("/stripe-product-price", async (c) => {
-//   const res = await stripe.prices.list({
-//     product: "123",
-//   });
-
-//   return c.json(res);
-// });
-
 const start = async () => {
   try {
     Promise.all([await producer.connect(), await consumer.connect()]);
-    await runKafkaSubscriptions()
+    await runKafkaSubscriptions();
     serve(
       {
         fetch: app.fetch,
         port: 8002,
       },
-      (info) => {
+      () => {
         console.log(`Payment service is running on port 8002`);
       }
     );
@@ -61,4 +41,5 @@ const start = async () => {
     process.exit(1);
   }
 };
+
 start();

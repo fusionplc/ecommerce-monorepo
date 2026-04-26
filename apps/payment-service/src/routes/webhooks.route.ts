@@ -1,9 +1,8 @@
 import { Hono } from "hono";
-import Stripe from "stripe";
-import stripe from "../utils/stripe";
+import { createHmac } from "crypto";
 import { producer } from "../utils/kafka";
 
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET as string;
+const webhookSecret = process.env.PAYSTACK_SECRET_KEY as string;
 const webhookRoute = new Hono();
 
 webhookRoute.get("/", (c) => {
@@ -14,47 +13,43 @@ webhookRoute.get("/", (c) => {
   });
 });
 
-
-webhookRoute.post("/stripe", async (c) => {
+webhookRoute.post("/paystack", async (c) => {
   const body = await c.req.text();
-  const sig = c.req.header("stripe-signature");
+  const signature = c.req.header("x-paystack-signature");
 
-  let event: Stripe.Event;
+  // Verify webhook signature using HMAC SHA512
+  const hash = createHmac("sha512", webhookSecret)
+    .update(body)
+    .digest("hex");
 
-  try {
-    event = stripe.webhooks.constructEvent(body, sig!, webhookSecret);
-  } catch (error) {
+  if (hash !== signature) {
     console.log("Webhook verification failed!");
     return c.json({ error: "Webhook verification failed!" }, 400);
   }
 
-  switch (event.type) {
-    case "checkout.session.completed":
-      const session = event.data.object as Stripe.Checkout.Session;
+  const event = JSON.parse(body);
 
-      const lineItems = await stripe.checkout.sessions.listLineItems(
-        session.id
-      );
-      // TODO: CREATE ORDER
+  switch (event.event) {
+    case "charge.success":
+      const data = event.data;
       producer.send("payment.successful", {
         value: {
-          userId: session.client_reference_id,
-          email: session.customer_details?.email,
-          amount: session.amount_total,
-          status: session.payment_status === "paid" ? "success" : "failed",
-          products: lineItems.data.map((item) => ({
-            name: item.description,
+          userId: data.metadata?.userId,
+          email: data.customer?.email,
+          amount: data.amount, // in kobo
+          status: data.status === "success" ? "success" : "failed",
+          products: data.metadata?.cart?.map((item: any) => ({
+            name: item.name,
             quantity: item.quantity,
-            price: item.price?.unit_amount,
+            price: item.price,
           })),
         },
       });
-
       break;
-
     default:
       break;
   }
+
   return c.json({ received: true });
 });
 

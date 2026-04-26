@@ -1,65 +1,76 @@
 import { Hono } from "hono";
-import stripe from "../utils/stripe";
 import { shouldBeUser } from "../middleware/authMiddleware";
 import { CartItemsType } from "@repo/types";
-import { getStripeProductPrice } from "../utils/stripeProduct";
+import axios from "axios";
 
 const sessionRoute = new Hono();
+const PAYSTACK_SECRET = process.env.PAYSTACK_SECRET_KEY as string;
 
 sessionRoute.post("/create-checkout-session", shouldBeUser, async (c) => {
   const { cart }: { cart: CartItemsType } = await c.req.json();
   const userId = c.get("userId");
 
-  const lineItems = await Promise.all(
-    cart.map(async (item) => {
-      const unitAmount = await getStripeProductPrice(item.id);
-      return {
-        price_data: {
-          currency: "usd",
-          product_data: {
-            name: item.name,
-          },
-          unit_amount: unitAmount as number,
-        },
-        quantity: item.quantity,
-      };
-    })
-  );
+  // Calculate total amount in kobo (Paystack uses smallest currency unit)
+  const totalAmount = cart.reduce((sum, item) => {
+    return sum + item.price * item.quantity * 100; // convert to kobo
+  }, 0);
 
   try {
-    const session = await stripe.checkout.sessions.create({
-      line_items: lineItems,
-      client_reference_id: userId,
-      mode: "payment",
-      ui_mode: "custom",
-      return_url:
-        "http://localhost:3002/return?session_id={CHECKOUT_SESSION_ID}",
-    });
+    const response = await axios.post(
+      "https://api.paystack.co/transaction/initialize",
+      {
+        amount: totalAmount,
+        currency: "NGN",
+        metadata: {
+          userId,
+          cart: cart.map((item) => ({
+            id: item.id,
+            name: item.name,
+            quantity: item.quantity,
+            price: item.price,
+          })),
+        },
+        callback_url: "http://localhost:3002/return",
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${PAYSTACK_SECRET}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
-    // console.log(session);
-
-    return c.json({ checkoutSessionClientSecret: session.client_secret });
+    const { authorization_url, reference } = response.data.data;
+    return c.json({ authorization_url, reference });
   } catch (error) {
     console.log(error);
-    return c.json({ error });
+    return c.json({ error }, 500);
   }
 });
 
-sessionRoute.get("/:session_id", async (c) => {
-  const { session_id } = c.req.param();
-  const session = await stripe.checkout.sessions.retrieve(
-    session_id as string,
-    {
-      expand: ["line_items"],
-    }
-  );
+// Verify transaction status by reference
+sessionRoute.get("/:reference", async (c) => {
+  const { reference } = c.req.param();
 
-  // console.log(session);
+  try {
+    const response = await axios.get(
+      `https://api.paystack.co/transaction/verify/${reference}`,
+      {
+        headers: {
+          Authorization: `Bearer ${PAYSTACK_SECRET}`,
+        },
+      }
+    );
 
-  return c.json({
-    status: session.status,
-    paymentStatus: session.payment_status,
-  });
+    const { status, gateway_response } = response.data.data;
+    return c.json({
+      status,
+      paymentStatus: gateway_response,
+    });
+  } catch (error) {
+    console.log(error);
+    return c.json({ error }, 500);
+  }
 });
 
 export default sessionRoute;
