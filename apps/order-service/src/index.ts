@@ -31,8 +31,8 @@ fastify.register(orderRoute);
 const start = async () => {
   try {
     Promise.all([
-      await createTopics(),
       await connectOrderDB(),
+      await createTopics(),
       await producer.connect(),
       await consumer.connect(),
     ]);

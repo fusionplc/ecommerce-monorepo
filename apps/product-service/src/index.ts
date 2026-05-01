@@ -1,11 +1,14 @@
+import "dotenv/config";
 import express, { NextFunction, Request, Response } from "express";
 import cors from "cors";
-import { clerkMiddleware, getAuth } from "@clerk/express";
+import { clerkMiddleware } from "@clerk/express";
 import { shouldBeUser } from "./middleware/authMiddleware.js";
 import productRouter from "./routes/product.route";
 import categoryRouter from "./routes/category.route";
 import { consumer, producer, createTopics } from "./utils/kafka.js";
+
 const app = express();
+
 app.use(
   cors({
     origin: ["http://localhost:3002", "http://localhost:3003"],
@@ -34,12 +37,17 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   console.log(err);
   return res
     .status(err.status || 500)
-    .json({ message: err.message || "Inter Server Error!" });
+    .json({ message: err.message || "Internal Server Error!" });
 });
 
 const start = async () => {
   try {
-    Promise.all([ await createTopics(), await producer.connect(), await consumer.connect()]);
+    await Promise.all([
+      createTopics(),
+      producer.connect(),
+      consumer.connect(),
+    ]);
+
     app.listen(8000, () => {
       console.log("Product service is running on 8000");
     });
@@ -47,10 +55,6 @@ const start = async () => {
     console.log(error);
     process.exit(1);
   }
-
-     app.listen(8000, () => {
-      console.log("Product service is running on 8000");
-    });
 };
 
-start()
+start();
