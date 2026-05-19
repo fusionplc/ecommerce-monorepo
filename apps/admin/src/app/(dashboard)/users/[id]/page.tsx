@@ -32,7 +32,7 @@ const getData = async (id: string): Promise<User | null> => {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-      }
+      },
     );
     const data = await res.json();
     return data;
@@ -172,7 +172,7 @@ const SingleUserPage = async ({
                 <SheetTrigger asChild>
                   <Button>Edit User</Button>
                 </SheetTrigger>
-                <EditUser />
+                <EditUser data={data} />
               </Sheet>
             </div>
             <div className="space-y-4 mt-4">

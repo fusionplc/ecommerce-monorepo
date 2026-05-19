@@ -1,6 +1,7 @@
 import { auth, type User } from "@clerk/nextjs/server";
 import { columns } from "./columns";
 import { DataTable } from "./data-table";
+import EditUser from "@/components/EditUser";
 
 const getData = async (): Promise<{ data: User[]; totalCount: number }> => {
   const { getToken } = await auth();
@@ -12,9 +13,10 @@ const getData = async (): Promise<{ data: User[]; totalCount: number }> => {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-      }
+      },
     );
     const data = await res.json();
+    console.log(data);
     return data;
   } catch (err) {
     console.log(err);

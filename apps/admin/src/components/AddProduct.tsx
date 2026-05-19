@@ -46,6 +46,7 @@ import { useAuth } from "@clerk/nextjs";
 // ] as const;
 
 const fetchCategories = async () => {
+  console.log(process.env.NEXT_PUBLIC_PRODUCT_SERVICE_URL);
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_PRODUCT_SERVICE_URL}/categories`,
   );

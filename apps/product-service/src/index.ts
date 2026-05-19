@@ -1,4 +1,4 @@
-import "dotenv/config";
+import dotenv from "dotenv";
 import express, { NextFunction, Request, Response } from "express";
 import cors from "cors";
 import { clerkMiddleware } from "@clerk/express";
@@ -7,6 +7,7 @@ import productRouter from "./routes/product.route";
 import categoryRouter from "./routes/category.route";
 import { consumer, producer, createTopics } from "./utils/kafka.js";
 
+dotenv.config();
 const app = express();
 
 app.use(

@@ -58,124 +58,158 @@ const AddUser = () => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
+
       if (!res.ok) {
-        throw new Error("Failed to create user!");
+        // throw new Error("Failed to create user!");
+        const body = await res.json();
+        throw body;
       }
     },
     onSuccess: () => {
       toast.success("User created successfully");
     },
-    onError: (error) => {
-      toast.error(error.message);
+    onError: (error: any) => {
+      const clerkErrors = error?.errors;
+
+      if (clerkErrors?.length) {
+        clerkErrors.forEach((err: any) => {
+          const param = err.meta?.paramName;
+
+          if (err.code === "form_identifier_exists") {
+            if (param === "username") {
+              form.setError("username", { message: err.message });
+            } else if (param === "email_address") {
+              form.setError("emailAddress", {
+                message: "An account with this email already exists.",
+              });
+            }
+          } else {
+            switch (err.code) {
+              case "form_username_taken":
+                form.setError("username", { message: err.message });
+                break;
+              case "form_password_pwned":
+                form.setError("password", { message: err.message });
+                break;
+              default:
+                toast.error(err.message);
+            }
+          }
+        });
+      } else {
+        toast.error("Something went wrong. Please try again.");
+      }
     },
   });
 
   return (
-    <SheetContent>
-      <SheetHeader>
-        <SheetTitle className="mb-4">Add User</SheetTitle>
-        <SheetDescription asChild>
-          <Form {...form}>
-            <form
-              className="space-y-8"
-              onSubmit={form.handleSubmit((data) => mutation.mutate(data))}
-            >
-              <FormField
-                control={form.control}
-                name="firstName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>First Name</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormDescription>Enter user first name.</FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="lastName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Last Name</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormDescription>Enter user last name.</FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="username"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Username</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormDescription>Enter username.</FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="emailAddress"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email Addresses</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        placeholder="email1@gmail.com, email2@gmail.com"
-                        onChange={(e) => {
-                          const emails = e.target.value
-                            .split(",")
-                            .map((email) => email.trim())
-                            .filter((email) => email);
-                          field.onChange(emails);
-                        }}
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      Only admin can see your email.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Password</FormLabel>
-                    <FormControl>
-                      <Input {...field} type="password" />
-                    </FormControl>
-                    <FormDescription>Enter user password.</FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button
-                type="submit"
-                disabled={mutation.isPending}
-                className="disabled:opacity-50 disabled:cursor-not-allowed"
+    <>
+      <SheetContent className="overflow-y-auto">
+        <SheetHeader>
+          <SheetTitle className="mb-4">Add User</SheetTitle>
+          <SheetDescription asChild>
+            <Form {...form}>
+              <form
+                className="space-y-8"
+                onSubmit={form.handleSubmit((data) => mutation.mutate(data))}
               >
-                {mutation.isPending ? "Submitting..." : "Submit"}
-              </Button>
-            </form>
-          </Form>
-        </SheetDescription>
-      </SheetHeader>
-    </SheetContent>
+                <FormField
+                  control={form.control}
+                  name="firstName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>First Name</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormDescription>Enter user first name.</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="lastName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Last Name</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormDescription>Enter user last name.</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="username"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Username</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormDescription>Enter username.</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="emailAddress"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email Addresses</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          placeholder="email1@gmail.com, email2@gmail.com"
+                          onChange={(e) => {
+                            const emails = e.target.value
+                              .split(",")
+                              .map((email) => email.trim())
+                              .filter((email) => email);
+                            field.onChange(emails);
+                          }}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Only admin can see your email.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Password</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="password" />
+                      </FormControl>
+                      <FormDescription>Enter user password.</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button
+                  type="submit"
+                  disabled={mutation.isPending}
+                  className="disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {mutation.isPending ? "Submitting..." : "Submit"}
+                </Button>
+              </form>
+            </Form>
+          </SheetDescription>
+        </SheetHeader>
+      </SheetContent>
+    </>
   );
 };
 
