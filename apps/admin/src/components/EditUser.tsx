@@ -30,6 +30,7 @@ import { Button } from "./ui/button";
 import { User } from "@clerk/nextjs/server";
 import { useAuth } from "@clerk/nextjs";
 import { useMutation } from "@tanstack/react-query";
+import { toast } from "react-toastify";
 
 interface EditUserProps {
   data: User;
@@ -67,35 +68,37 @@ const EditUser = ({ data }: EditUserProps) => {
       const token = await getToken();
 
       const [firstName, ...rest] = values.fullName.split(" ");
-
       const lastName = rest.join(" ");
+      const { email } = values;
 
-      try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_AUTH_SERVICE_URL}/users/${data.id}`,
-          {
-            method: "PATCH",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-              firstName,
-              lastName,
-            }),
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_AUTH_SERVICE_URL}/users/${data.id}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
-        );
+          body: JSON.stringify({
+            firstName,
+            lastName,
+            email,
+          }),
+        },
+      );
 
-        if (!res.ok) {
-          throw new Error("Failed to update user");
-        }
-
-        const updatedUser = await res.json();
-
-        console.log(updatedUser);
-      } catch (error) {
-        console.log(error);
+      if (!res.ok) {
+        throw new Error("Failed to update user");
       }
+
+      return res.json();
+    },
+    onSuccess: (updatedUser) => {
+      console.log(updatedUser);
+      toast.success("You have edited your details successfully");
+    },
+    onError: (error) => {
+      toast.error(error.message);
     },
   });
 

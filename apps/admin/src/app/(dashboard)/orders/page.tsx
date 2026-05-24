@@ -13,7 +13,7 @@ const getData = async (): Promise<OrderType[]> => {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-      }
+      },
     );
     const data = await res.json();
     return data;

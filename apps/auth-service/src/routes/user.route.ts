@@ -36,29 +36,36 @@ router.post("/", async (req, res) => {
 router.patch("/:id", async (req, res) => {
   try {
     const { id } = req.params;
+    const { firstName, lastName, email } = req.body;
 
-    type UpdateParams = Parameters<
-      typeof clerkClient.users.updateUser
-    >[1];
-
-    const updateData: UpdateParams = req.body;
-
-    const updatedUser = await clerkClient.users.updateUser(
-      id,
-      updateData,
-    );
-    console.log(updateData)
-    console.log(updatedUser)
-
-    producer.send("user.updated", {
-      value: {
-        id: updatedUser.id,
-        username: updatedUser.username,
-        email:
-          updatedUser.emailAddresses[0]?.emailAddress,
-      },
-      phone: updatedUser.phoneNumbers[0]?.phoneNumber
+    const updatedUser = await clerkClient.users.updateUser(id, {
+      firstName,
+      lastName,
     });
+
+    if (email) {
+      const currentEmail = updatedUser.emailAddresses[0]?.emailAddress;
+      if (currentEmail !== email) {
+        await clerkClient.emailAddresses.createEmailAddress({
+          userId: id,
+          emailAddress: email,
+          verified: true, // skip verification flow
+          primary: true,
+        });
+      }
+    }
+
+    // if (phone) {
+    //   const currentPhone = updatedUser.phoneNumbers[0]?.phoneNumber;
+    //   if (currentPhone !== phone) {
+    //     await clerkClient.phoneNumbers.createPhoneNumber({
+    //       userId: id,
+    //       phoneNumber: phone,
+    //       verified: true,
+    //       primary: true,
+    //     });
+    //   }
+    // }
 
     res.status(200).json(updatedUser);
   } catch (error: any) {
