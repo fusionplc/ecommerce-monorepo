@@ -22,6 +22,30 @@ export const orderRoute = async (fastify: FastifyInstance) => {
       return reply.send(orders);
     }
   );
+
+  fastify.post(
+  "/orders",
+  { preHandler: shouldBeAdmin },
+  async (request, reply) => {
+    const { amount, userId, email, status } = request.body as {
+      amount: number;
+      userId: string;
+      email: string;
+      status: "pending" | "processing" | "success" | "failed";
+    };
+
+    const order = new Order({
+      amount,
+      userId,
+      email,
+      status,
+    });
+
+    await order.save();
+
+    return reply.status(201).send(order);
+  }
+);
   fastify.get(
     "/order-chart",
     { preHandler: shouldBeAdmin },
@@ -107,4 +131,14 @@ export const orderRoute = async (fastify: FastifyInstance) => {
       return reply.send(results);
     }
   );
+
+  fastify.delete(
+  "/orders",
+  { preHandler: shouldBeAdmin },
+  async (request, reply) => {
+    const { ids } = request.body as { ids: string[] };
+    await Order.deleteMany({ _id: { $in: ids } });
+    return reply.status(200).send({ message: "Orders deleted successfully" });
+  }
+);
 };

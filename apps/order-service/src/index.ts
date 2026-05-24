@@ -1,4 +1,5 @@
 import Fastify from "fastify";
+import cors from "@fastify/cors";
 import { clerkPlugin } from "@clerk/fastify";
 import { shouldBeUser } from "./middleware/authMiddleware.js";
 import { connectOrderDB } from "@repo/order-db";
@@ -7,7 +8,14 @@ import { consumer, producer, createTopics } from "./utils/kafka.js";
 import { runKafkaSubscriptions } from "./utils/subscriptions.js";
 
 
+
 const fastify = Fastify();
+
+await fastify.register(cors, {
+  origin: "http://localhost:3003", // your Next.js URL
+  methods: ["GET", "POST", "PATCH", "PUT", "DELETE"],
+  credentials: true,
+});
 
 fastify.register(clerkPlugin);
 
