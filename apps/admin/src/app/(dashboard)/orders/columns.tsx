@@ -25,7 +25,9 @@ import Link from "next/link";
 //   status: "pending" | "processing" | "success" | "failed";
 // };
 
-export const columns: ColumnDef<OrderType>[] = [
+export const getColumns = (
+  onViewDetails: (order: OrderType) => void,
+): ColumnDef<OrderType>[] => [
   {
     id: "select",
     header: ({ table }) => (
@@ -74,7 +76,7 @@ export const columns: ColumnDef<OrderType>[] = [
             `p-1 rounded-md w-max text-xs`,
             status === "pending" && "bg-yellow-500/40",
             status === "success" && "bg-green-500/40",
-            status === "failed" && "bg-red-500/40"
+            status === "failed" && "bg-red-500/40",
           )}
         >
           {status as string}
@@ -90,7 +92,7 @@ export const columns: ColumnDef<OrderType>[] = [
       const formatted = new Intl.NumberFormat("en-US", {
         style: "currency",
         currency: "USD",
-      }).format(amount/100);
+      }).format(amount);
 
       return <div className="text-right font-medium">{formatted}</div>;
     },
@@ -119,7 +121,9 @@ export const columns: ColumnDef<OrderType>[] = [
             <DropdownMenuItem>
               <Link href={`/users/${order.userId}`}>View customer</Link>
             </DropdownMenuItem>
-            <DropdownMenuItem>View order details</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onViewDetails(order)}>
+              View order details
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );

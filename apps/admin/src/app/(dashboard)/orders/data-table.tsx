@@ -19,26 +19,28 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { DataTablePagination } from "@/components/TablePagination";
+import { getColumns } from "./columns";
+import OrderDetailsSheet from "@/components/OrderDetailsSheet";
+import { OrderType } from "@repo/types";
 import { Trash2 } from "lucide-react";
 import { useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "react-toastify";
 
-interface DataTableProps<TData, TValue> {
-  columns: ColumnDef<TData, TValue>[];
-  data: TData[];
+interface DataTableProps {
+  data: OrderType[];
 }
 
-export function DataTable<TData, TValue>({
-  columns,
-  data,
-}: DataTableProps<TData, TValue>) {
+export function DataTable({ data }: DataTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [rowSelection, setRowSelection] = useState({});
+  const [selectedOrder, setSelectedOrder] = useState<OrderType | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const { getToken } = useAuth();
   const router = useRouter();
+
+  const columns = getColumns((order) => setSelectedOrder(order));
 
   const table = useReactTable({
     data,
@@ -145,6 +147,11 @@ export function DataTable<TData, TValue>({
         </TableBody>
       </Table>
       <DataTablePagination table={table} />
+      <OrderDetailsSheet
+        order={selectedOrder}
+        open={!!selectedOrder}
+        onClose={() => setSelectedOrder(null)}
+      />
     </div>
   );
 }
