@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { createClerkClient } from "@clerk/backend";
 import { shouldBeUser } from "../middleware/authMiddleware";
 import { CartItemsType } from "@repo/types";
 import axios from "axios";
@@ -6,9 +7,21 @@ import axios from "axios";
 const sessionRoute = new Hono();
 const PAYSTACK_SECRET = process.env.PAYSTACK_SECRET_KEY as string;
 
+const clerk = createClerkClient({
+  secretKey: process.env.CLERK_SECRET_KEY,
+});
+
 sessionRoute.post("/create-checkout-session", shouldBeUser, async (c) => {
   const { cart }: { cart: CartItemsType } = await c.req.json();
   const userId = c.get("userId");
+
+  // ✅ Fetch user from Clerk backend SDK
+  const user = await clerk.users.getUser(userId);
+  const email = user.emailAddresses[0]?.emailAddress;
+
+  if (!email) {
+    return c.json({ error: "User email not found" }, 400);
+  }
 
   // Calculate total amount in kobo (Paystack uses smallest currency unit)
   const totalAmount = cart.reduce((sum, item) => {
@@ -19,6 +32,7 @@ sessionRoute.post("/create-checkout-session", shouldBeUser, async (c) => {
     const response = await axios.post(
       "https://api.paystack.co/transaction/initialize",
       {
+        email,
         amount: totalAmount,
         currency: "NGN",
         metadata: {
@@ -30,7 +44,7 @@ sessionRoute.post("/create-checkout-session", shouldBeUser, async (c) => {
             price: item.price,
           })),
         },
-        callback_url: "http://localhost:3002/return",
+        callback_url: `${process.env.CLIENT_URL}/return`
       },
       {
         headers: {

@@ -13,13 +13,13 @@ import {
 import { Button } from "./ui/button";
 import { useTheme } from "next-themes";
 import { SidebarTrigger } from "./ui/sidebar";
-import { useClerk, useUser } from "@clerk/nextjs"; // ✅ add this
-import { useRouter } from "next/navigation"; // ✅ add this
+import { useClerk, useUser } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 
 const Navbar = () => {
   const { theme, setTheme } = useTheme();
-  const { signOut, openUserProfile } = useClerk(); // ✅
-  const { user } = useUser(); // ✅
+  const { signOut, openUserProfile } = useClerk();
+  const { user } = useUser();
   const router = useRouter();
 
   return (
