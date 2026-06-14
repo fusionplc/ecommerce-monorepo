@@ -5,36 +5,43 @@ const kafkaClient = createKafkaClient("payment-service");
 export const producer = createProducer(kafkaClient);
 export const consumer = createConsumer(kafkaClient, "payment-group");
 
-
 export const createTopics = async (retries = 10, delay = 3000) => {
   const admin = createAdmin(kafkaClient);
 
   for (let i = 0; i < retries; i++) {
     try {
       await admin.connect();
+
+      const existing = await admin.listTopics();
+      const toCreate = ["payment.completed", "payment.failed"].filter(
+        (t) => !existing.includes(t)
+      );
+
+      if (toCreate.length === 0) {
+        console.log("✓ Payment Kafka topics already exist, continuing...");
+        await admin.disconnect();
+        return;
+      }
+
       await admin.createTopics({
         waitForLeaders: true,
         validateOnly: false,
-        topics: [
-          { topic: "product.created", numPartitions: 3, replicationFactor: 3 },
-          { topic: "product.deleted", numPartitions: 3, replicationFactor: 3 },
-        ],
+        topics: toCreate.map((topic) => ({
+          topic,
+          numPartitions: 3,
+          replicationFactor: 1,
+        })),
       });
+
       await admin.disconnect();
-      console.log("✓ Kafka topics ready");
+      console.log("✓ Payment Kafka topics ready");
       return;
     } catch (err: any) {
-      // Topics already exist — that's fine
-      if (err?.message?.includes("Topic creation errors")) {
-        console.log("✓ Kafka topics already exist, continuing...");
-        await admin.disconnect().catch(() => {});
-        return;
-      }
       console.log(`Kafka not ready, retrying... (${i + 1}/${retries})`);
       await admin.disconnect().catch(() => {});
       await new Promise((res) => setTimeout(res, delay));
     }
   }
 
-  throw new Error("✗ Could not connect to Kafka after maximum retries");
+  throw new Error("✗ Payment service could not connect to Kafka after maximum retries");
 };

@@ -17,7 +17,8 @@ const nextConfig: NextConfig = {
         hostname:"img.clerk.com",
       },
     ]
-  }
+  },
+  transpilePackages: ["@repo/types", "@repo/product-db", "@repo/order-db"],
 };
 
 export default nextConfig;

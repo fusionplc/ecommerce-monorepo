@@ -3,9 +3,9 @@
     "version": "0.0.0",
     "type": "module",
     "scripts": {
-    "db:generate": "prisma generate",
-    "db:migrate": "prisma migrate dev --skip-generate",
-    "db:deploy": "prisma migrate deploy"
+    "postinstall": "prisma generate --config prisma.config.ts",
+    "db:migrate": "prisma migrate deploy --config prisma.config.ts",
+    "db:studio": "prisma studio --config prisma.config.ts"
   },
     "devDependencies": {
         "@types/node": "^25.6.0",

@@ -8,7 +8,8 @@ const nextConfig: NextConfig = {
             hostname:"res.cloudinary.com",
           },
         ]
-      }
+      },
+      transpilePackages: ["@repo/types", "@repo/product-db", "@repo/order-db"],
 };
 
 export default nextConfig;
