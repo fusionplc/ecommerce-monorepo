@@ -49,8 +49,8 @@ const start = async () => {
       consumer.connect(),
     ]);
 
-    app.listen(8000, () => {
-      console.log("Product service is running on 8000");
+    app.listen(process.env.PORT || 8000, () => {
+      console.log(`Product service is running on ${process.env.PORT || 8000}`);
     });
   } catch (error) {
     console.log(error);

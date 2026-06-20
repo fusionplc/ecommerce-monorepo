@@ -7,7 +7,7 @@
       "outputs": [".next/**", "!.next/cache/**"],
       "env": [
           "REDPANDA_BROKERS",
-          "REDPANDA_USERNAME", 
+          "REDPANDA_USERNAME",
           "REDPANDA_PASSWORD",
           "REDPANDA_SASL_MECHANISM",
           "CLERK_SECRET_KEY",
