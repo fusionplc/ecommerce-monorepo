@@ -3,8 +3,8 @@ import express, { NextFunction, Request, Response } from "express";
 import cors from "cors";
 import { clerkMiddleware } from "@clerk/express";
 import { shouldBeUser } from "./middleware/authMiddleware.js";
-import productRouter from "./routes/product.route";
-import categoryRouter from "./routes/category.route";
+import productRouter from "./routes/product.route.js";
+import categoryRouter from "./routes/category.route.js";
 import { consumer, producer, createTopics } from "./utils/kafka.js";
 
 dotenv.config();

@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { prisma, Prisma } from "@repo/product-db";
-import { producer } from "../utils/kafka";
+import { producer } from "../utils/kafka.js";
 import { ProductEventType } from "@repo/types";
 
 export const createProduct = async (req: Request, res: Response) => {

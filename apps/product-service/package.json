@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "pnpm dlx tsx --env-file=.env --watch src/index.ts",
     "check-types": "tsc --noEmit",
+    "build": "tsc",
     "start": "node dist/index.js"
   },
   "keywords": [],
@@ -24,6 +25,7 @@
     "@repo/types": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.3"
+    "@types/express": "^5.0.3",
+    "typescript": "^5.0.0"
   }
 }
