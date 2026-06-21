@@ -18,6 +18,10 @@
   "engines": {
     "node": ">=20.0.0"
   },
+  "pnpm": {
+    "onlyBuiltDependencies": [],
+    "neverBuiltDependencies": ["@prisma/dev"]
+  },
   "dependencies": {
     "next": "^15.5.19"
   }
