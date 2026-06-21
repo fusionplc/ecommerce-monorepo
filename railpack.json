@@ -6,7 +6,10 @@
   },
   "steps": {
     "install": {
-      "commands": ["pnpm install --frozen-lockfile"]
+      "commands": [
+        "npm install -g pnpm@10.33.0 --force",
+        "pnpm install --frozen-lockfile"
+      ]
     },
     "build": {
       "commands": ["pnpm turbo run build --filter=product-service..."]
@@ -16,3 +19,9 @@
     "startCommand": "pnpm --filter product-service start"
   }
 }
+
+
+
+
+
+
