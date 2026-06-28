@@ -4,11 +4,10 @@
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": [".next/**", "!.next/cache/**"],
-      "outputs": ["dist/**", ".next/**", "generated/**"],
+      "outputs": [".next/**", "!.next/cache/**", "dist/**", "app/generated/**"],
       "env": [
           "REDPANDA_BROKERS",
-          "REDPANDA_USERNAME",
+          "REDPANDA_USERNAME", 
           "REDPANDA_PASSWORD",
           "REDPANDA_SASL_MECHANISM",
           "CLERK_SECRET_KEY",
