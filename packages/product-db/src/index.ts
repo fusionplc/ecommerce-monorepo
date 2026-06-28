@@ -1,3 +1,3 @@
-export { prisma } from "./client";
-export { Prisma } from "../app/generated/prisma/client";
-export type { Product, Category } from "../app/generated/prisma/client";
+export { prisma } from "./client.js";
+export { Prisma } from "./generated/prisma/client.js";
+export type { Product, Category } from "./generated/prisma/client.js";

@@ -3,3 +3,6 @@ node_modules
 .env
 
 /app/generated/prisma
+dist/
+src/generated/
+app/
